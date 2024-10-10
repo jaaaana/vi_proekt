@@ -4,18 +4,18 @@ from solutions import solutions
 import random
 
 
-def original_grid():
+def original_grid(number):
     grid = []
-    string = grids[0]
+    string = grids[number]
     for i in range(5):
         grid.append(list(string[i * 5:i * 5 + 5]))
     print(grid)
     return grid
 
 
-def solution_grid():
+def solution_grid(number):
     grid = []
-    string = solutions[0]
+    string = solutions[number]
     for i in range(5):
         grid.append(list(string[i * 5:i * 5 + 5]))
     print(grid)
@@ -46,8 +46,6 @@ YELLOW = (255, 255, 0)
 
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Waffle Game")
-
-solved_grid = solution_grid()
 
 
 # Function to draw the grid
@@ -82,7 +80,10 @@ def color_grid(grid, solution_grid):
 
 # Main game loop
 def main():
-    movable_grid, fixed_positions = original_grid(), get_fixed_positions(original_grid(), solved_grid)
+    random_grid = random.randint(0, 100)
+    solved_grid = solution_grid(random_grid)
+    movable_grid, fixed_positions = original_grid(random_grid), get_fixed_positions(original_grid(random_grid),
+                                                                                    solved_grid)
     selected = None  # Tracks the selected square for dragging
 
     running = True
