@@ -1,7 +1,8 @@
-from searching_framework import Problem, breadth_first_graph_search
+from searching_framework import Problem, breadth_first_graph_search, astar_search
 from grids import grids
 from solutions import solutions
 import random
+
 
 brojach = 0
 
@@ -20,6 +21,13 @@ class WaffleAgent(Problem):
         self.goal = ((0, 0, 0, 0, 0), (0, 0, 0, 0, 0), (0, 0, 0, 0, 0), (0, 0, 0, 0, 0), (0, 0, 0, 0, 0))
         self.goal_grid = goal_grid
 
+    def h(self, node):
+        zbir2 = 0
+        for row in node.state[0]:
+            for r in row:
+                zbir2 += row[r]
+        return zbir2
+
     def actions(self, state):
         return self.successor(state).keys()
 
@@ -27,9 +35,6 @@ class WaffleAgent(Problem):
         return self.successor(state)[action]
 
     def successor(self, state):
-        global brojach
-        print(brojach)
-        brojach += 1
         neighbors = {}
 
         moves = []
@@ -107,10 +112,6 @@ class WaffleAgent(Problem):
             new_col.append(r1)
             r2 = tuple(row2)
             new_gr.append(r2)
-        br_nuli = 0
-        for row in new_col:
-            br_nuli += row.count(0)
-        print(br_nuli)
         new_state = (tuple(new_col), tuple(new_gr))
 
         return new_state
@@ -124,6 +125,7 @@ if __name__ == '__main__':
     original_grid = read_grid(grids[random_choice])
     solution_grid = read_grid(solutions[random_choice])
 
+    print(random_choice)
     print(original_grid)
     print(solution_grid)
 
@@ -146,7 +148,7 @@ if __name__ == '__main__':
 
     in_state = tuple(in_state)
     waffle = WaffleAgent(in_state, original_grid, solution_grid)
-    node = breadth_first_graph_search(waffle)
+    node = astar_search(waffle)
     if node is not None:
         print(node.solution())
         print(node.solve())
