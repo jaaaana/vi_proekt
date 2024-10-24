@@ -3,8 +3,8 @@ from grids import grids
 from solutions import solutions
 import random
 
-gray = 2
-yellow = 1
+gray = 10
+yellow = 5
 
 
 def dict_to_tuple(d):
@@ -212,10 +212,8 @@ class WaffleAgent(Problem):
 
 
 if __name__ == '__main__':
-    # random_choice = random.randint(0, 100)
-    # file = open('./results.txt', 'w')
     for random_choice in range(100):
-        random_choice = 80
+        random_choice = 36
         original_grid = read_grid(grids[random_choice])
         solution_grid = read_grid(solutions[random_choice])
 
@@ -268,5 +266,5 @@ if __name__ == '__main__':
                         sum += r
                 print(sum)
         else:
-            print("retardiran si")
+            print("No solution")
         break
