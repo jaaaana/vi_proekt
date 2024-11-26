@@ -1,4 +1,4 @@
-from searching_framework import Problem, astar_search, depth_limited_search
+from searching_framework import Problem, astar_search
 from grids import grids
 from solutions import solutions
 import random
@@ -28,6 +28,11 @@ def tuple_to_dict(t):
 
 
 def check_yellow(i, j, current_grid, solution, total, green):
+    return check_row(i, j, current_grid, solution, total, green) or check_column(i, j, current_grid, solution, total,
+                                                                                 green)
+
+
+def check_row(i, j, current_grid, solution, total, green):
     letter = current_grid[i][j]
     row_sol = [solution[i][k] for k in range(5) if i in (0, 2, 4)]
     in_row = letter in row_sol
@@ -42,6 +47,11 @@ def check_yellow(i, j, current_grid, solution, total, green):
             if row_grid.index(letter) == j:
                 return True
 
+    return False
+
+
+def check_column(i, j, current_grid, solution, total, green):
+    letter = current_grid[i][j]
     col_list = [solution[k][j] for k in range(5) if j in (0, 2, 4)]
     in_col = letter in col_list
     if in_col:
@@ -90,6 +100,7 @@ def read_grid(string):
         grid.append(tuple(string[i * 5:i * 5 + 5]))
     return tuple(grid)
 
+
 def foo(new_grid, solution_grid, total, correct, current_colors):
     new_colors = [[0 for _ in range(5)] for _ in range(5)]
     new_correct = correct
@@ -113,7 +124,6 @@ def foo(new_grid, solution_grid, total, correct, current_colors):
     return new_colors, new_correct
 
 
-
 def is_valid(i, j, k, l, moves, state):
     if (i, j) == (1, 1) or (k, l) == (1, 1) or (i, j) == (1, 3) or (k, l) == (1, 3) or (i, j) == (
             3, 1) or (k, l) == (3, 1) or (i, j) == (3, 3) or (k, l) == (3, 3):
@@ -127,6 +137,12 @@ def is_valid(i, j, k, l, moves, state):
     return True
 
 
+def secondary_tiebreaker(state):
+    colors = state[0]
+    green_count = sum(row.count(0) for row in colors)
+    return green_count
+
+
 class WaffleAgent(Problem):
     def __init__(self, initial, starting, goal_grid, total, correct):
         super().__init__((initial, starting, correct))
@@ -135,17 +151,22 @@ class WaffleAgent(Problem):
         self.total = total
 
     def h(self, node):
-        # if node.depth > 10: return 100
         sum = 0
         for row in node.state[0]:
             for r in row:
                 sum += r
-        sum -= (10 - node.depth)
-        return sum
-        # misplaced = 0
-        # for row in node.state[0]:
-        #     misplaced += 5 - row.count(0)
-        # return misplaced // 2
+        # if node.depth < 7:
+        # sum -= (10 - node.depth)
+        return sum - 1 * secondary_tiebreaker(node.state)
+
+    # def h(self, node):
+    #     misplaced = 0
+    #     for i in range(5):
+    #         for j in range(5):
+    #             if node.state[1][i][j] != self.goal_grid[i][j]:
+    #                 misplaced += 1
+    #     # penalty = max(0, 10 - node.depth)
+    #     return misplaced - node.depth
 
     def actions(self, state):
         return self.successor(state).keys()
@@ -174,7 +195,6 @@ class WaffleAgent(Problem):
                 neighbors[action] = res
         return neighbors
 
-
     def generate_state(self, state, move):
         x1, y1 = move[0]
         x2, y2 = move[1]
@@ -190,7 +210,7 @@ class WaffleAgent(Problem):
         new_colors, correct_dict = foo(new_grid, self.goal_grid, self.total, correct_dict, colors)
 
         new_color_sum = sum(sum(row) for row in new_colors)
-        if new_color_sum > initial_color_sum:
+        if new_color_sum >= initial_color_sum:
             return None
 
         new_state = (
@@ -208,7 +228,8 @@ class WaffleAgent(Problem):
 if __name__ == '__main__':
     # suma = 0
     for random_choice in range(100):
-        random_choice = 49
+        random_choice = 9
+        print(random_choice)
         original_grid = read_grid(grids[random_choice])
         solution_grid = read_grid(solutions[random_choice])
 
@@ -238,6 +259,7 @@ if __name__ == '__main__':
         waffle = WaffleAgent(initial_state, original_grid, solution_grid, total_dict,
                              dict_to_tuple(green_dict))
         node = astar_search(waffle)
+        suma = 0
         if node is not None:
             print(node.solution())
             print(len(node.solution()))
@@ -248,8 +270,8 @@ if __name__ == '__main__':
                 print('correct', state[2])
                 suma = sum(sum(row) for row in state[0])
                 print(suma)
-            # suma += len(node.solution())
+            if len(node.solution()) > 10:
+                print(random_choice, ";", len(node.solution()))
         else:
             print("no sol")
         break
-    # print(suma / 100)
