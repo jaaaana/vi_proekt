@@ -2,6 +2,7 @@ from searching_framework import Problem, astar_search
 from grids import grids
 from solutions import solutions
 import random
+from yellow_tile_script import *
 
 gray = 2
 yellow = 1
@@ -27,101 +28,11 @@ def tuple_to_dict(t):
     return result
 
 
-def check_yellow(i, j, current_grid, solution, total, green):
-    return check_row(i, j, current_grid, solution, total, green) or check_column(i, j, current_grid, solution, total,
-                                                                                 green)
-
-
-def check_row(i, j, current_grid, solution, total, green):
-    letter = current_grid[i][j]
-    row_sol = [solution[i][k] for k in range(5) if i in (0, 2, 4)]
-    in_row = letter in row_sol
-    if in_row:
-        if total[i // 2][letter] <= green[i // 2][letter]:
-            return False
-        row_grid = [current_grid[i][k] for k in range(5) if i in (0, 2, 4)]
-        grid_count = row_grid.count(letter)
-        if total[i // 2][letter] > green[i // 2][letter] and grid_count <= total[i // 2][letter]:
-            return True
-        else:
-            if row_grid.index(letter) == j:
-                return True
-
-    return False
-
-
-def check_column(i, j, current_grid, solution, total, green):
-    letter = current_grid[i][j]
-    col_list = [solution[k][j] for k in range(5) if j in (0, 2, 4)]
-    in_col = letter in col_list
-    if in_col:
-        if total[j // 2 + 3][letter] <= green[j // 2 + 3][letter]:
-            return False
-        col_grid = [current_grid[k][j] for k in range(5) if j in (0, 2, 4)]
-        if total[j // 2 + 3][letter] > green[j // 2 + 3][letter] and col_grid.count(letter) <= total[j // 2 + 3][
-            letter]:
-            return True
-        else:
-            if col_grid.index(letter) == i:
-                return True
-
-    return False
-
-
-def create_dictionaries(grid):
-    total = {}
-    green = {}
-    for i in (0, 2, 4):
-        for j in range(5):
-            if i // 2 not in total:
-                total[i // 2] = {}
-                green[i // 2] = {}
-            if grid[i][j] not in total[i // 2]:
-                total[i // 2][grid[i][j]] = 0
-                green[i // 2][grid[i][j]] = 0
-            total[i // 2][grid[i][j]] += 1
-
-    for j in (0, 2, 4):
-        for i in range(5):
-            if j // 2 + 3 not in total:
-                total[j // 2 + 3] = {}
-                green[j // 2 + 3] = {}
-            if grid[i][j] not in total[j // 2 + 3]:
-                total[j // 2 + 3][grid[i][j]] = 0
-                green[j // 2 + 3][grid[i][j]] = 0
-            total[j // 2 + 3][grid[i][j]] += 1
-
-    return total, green
-
-
 def read_grid(string):
     grid = []
     for i in range(5):
         grid.append(tuple(string[i * 5:i * 5 + 5]))
     return tuple(grid)
-
-
-def foo(new_grid, solution_grid, total, correct, current_colors):
-    new_colors = [[0 for _ in range(5)] for _ in range(5)]
-    new_correct = correct
-    for i in range(5):
-        for j in range(5):
-            if solution_grid[i][j] == new_grid[i][j] and current_colors[i][j] != 0:
-                if i in (0, 2, 4):
-                    new_correct[i // 2][new_grid[i][j]] += 1
-                if j in (0, 2, 4):
-                    new_correct[j // 2 + 3][new_grid[i][j]] += 1
-
-    for i in range(5):
-        for j in range(5):
-            if solution_grid[i][j] == new_grid[i][j]:
-                continue
-            elif check_yellow(i, j, new_grid, solution_grid, total, new_correct):
-                new_colors[i][j] = yellow
-            else:
-                new_colors[i][j] = gray
-
-    return new_colors, new_correct
 
 
 def is_valid(i, j, k, l, moves, state):
@@ -150,14 +61,14 @@ class WaffleAgent(Problem):
         self.goal_grid = goal_grid
         self.total = total
 
-    def h(self, node):
-        sum = 0
-        for row in node.state[0]:
-            for r in row:
-                sum += r
-        # if node.depth < 7:
-        # sum -= (10 - node.depth)
-        return sum - 1 * secondary_tiebreaker(node.state)
+    # def h(self, node):
+    #     sum = 0
+    #     for row in node.state[0]:
+    #         for r in row:
+    #             sum += r
+    #     # if node.depth < 7:
+    #     # sum -= (10 - node.depth)
+    #     return sum - 1 * secondary_tiebreaker(node.state)
 
     # def h(self, node):
     #     misplaced = 0
@@ -167,6 +78,18 @@ class WaffleAgent(Problem):
     #                 misplaced += 1
     #     # penalty = max(0, 10 - node.depth)
     #     return misplaced - node.depth
+
+    def h(self, node):
+        misplaced = 0
+        green_bonus = 0
+        grid, colors = node.state[1], node.state[0]
+        for i in range(5):
+            for j in range(5):
+                if grid[i][j] != self.goal_grid[i][j]:
+                    misplaced += 1
+                if colors[i][j] == 0:
+                    green_bonus += 2
+        return (misplaced - green_bonus) - 0.1 * secondary_tiebreaker(node.state)
 
     def actions(self, state):
         return self.successor(state).keys()
@@ -207,7 +130,7 @@ class WaffleAgent(Problem):
 
         new_grid[x1][y1], new_grid[x2][y2] = new_grid[x2][y2], new_grid[x1][y1]
 
-        new_colors, correct_dict = foo(new_grid, self.goal_grid, self.total, correct_dict, colors)
+        new_colors, correct_dict = refresh_colors(new_grid, self.goal_grid, self.total, correct_dict, colors)
 
         new_color_sum = sum(sum(row) for row in new_colors)
         if new_color_sum >= initial_color_sum:
@@ -227,32 +150,15 @@ class WaffleAgent(Problem):
 
 if __name__ == '__main__':
     # suma = 0
-    for random_choice in range(100):
-        random_choice = 9
+    for random_choice in [9, 12, 15, 25, 32, 35, 36, 54, 56, 65, 73, 78, 81, 90, 93, 98]:
+        random_choice = 0
         print(random_choice)
         original_grid = read_grid(grids[random_choice])
         solution_grid = read_grid(solutions[random_choice])
 
         total_dict, green_dict = create_dictionaries(solution_grid)
 
-        initial = [[0 for _ in range(5)] for _ in range(5)]
-
-        for i in range(5):
-            for j in range(5):
-                if solution_grid[i][j] == original_grid[i][j]:
-                    if i in (0, 2, 4):
-                        green_dict[i // 2][original_grid[i][j]] += 1
-                    if j in (0, 2, 4):
-                        green_dict[j // 2 + 3][original_grid[i][j]] += 1
-
-        for i in range(5):
-            for j in range(5):
-                if solution_grid[i][j] == original_grid[i][j]:
-                    continue
-                elif check_yellow(i, j, original_grid, solution_grid, total_dict, green_dict):
-                    initial[i][j] = yellow
-                else:
-                    initial[i][j] = gray
+        initial, green_dict = initial_colors(original_grid, solution_grid, total_dict, green_dict)
 
         initial_state = tuple(tuple(row) for row in initial)
 
