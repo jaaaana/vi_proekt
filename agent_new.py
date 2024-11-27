@@ -148,36 +148,37 @@ class WaffleAgent(Problem):
         return self.goal == state[0]
 
 
+def main(number):
+    original_grid = read_grid(grids[number])
+    solution_grid = read_grid(solutions[number])
+
+    total_dict, green_dict = create_dictionaries(solution_grid)
+
+    initial, green_dict = initial_colors(original_grid, solution_grid, total_dict, green_dict)
+
+    initial_state = tuple(tuple(row) for row in initial)
+
+    waffle = WaffleAgent(initial_state, original_grid, solution_grid, total_dict,
+                         dict_to_tuple(green_dict))
+    node = astar_search(waffle)
+    suma = 0
+    if node is not None:
+        print(node.solution())
+        print(len(node.solution()))
+        states = node.solve()
+        return node.solution()
+        # for state in states:
+        #     print('colors', state[0])
+        #     print('grid', state[1])
+        #     print('correct', state[2])
+        #     suma = sum(sum(row) for row in state[0])
+        #     print(suma)
+        # if len(node.solution()) > 10:
+        #     print(random_choice, ";", len(node.solution()))
+    else:
+        print("no sol")
+        return None
+
+
 if __name__ == '__main__':
-    # suma = 0
-    for random_choice in [9, 12, 15, 25, 32, 35, 36, 54, 56, 65, 73, 78, 81, 90, 93, 98]:
-        random_choice = 0
-        print(random_choice)
-        original_grid = read_grid(grids[random_choice])
-        solution_grid = read_grid(solutions[random_choice])
-
-        total_dict, green_dict = create_dictionaries(solution_grid)
-
-        initial, green_dict = initial_colors(original_grid, solution_grid, total_dict, green_dict)
-
-        initial_state = tuple(tuple(row) for row in initial)
-
-        waffle = WaffleAgent(initial_state, original_grid, solution_grid, total_dict,
-                             dict_to_tuple(green_dict))
-        node = astar_search(waffle)
-        suma = 0
-        if node is not None:
-            print(node.solution())
-            print(len(node.solution()))
-            states = node.solve()
-            for state in states:
-                print('colors', state[0])
-                print('grid', state[1])
-                print('correct', state[2])
-                suma = sum(sum(row) for row in state[0])
-                print(suma)
-            if len(node.solution()) > 10:
-                print(random_choice, ";", len(node.solution()))
-        else:
-            print("no sol")
-        break
+    main(1)
