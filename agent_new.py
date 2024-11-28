@@ -55,8 +55,8 @@ def secondary_tiebreaker(state):
 
 
 class WaffleAgent(Problem):
-    def __init__(self, initial, starting, goal_grid, total, correct):
-        super().__init__((initial, starting, correct))
+    def __init__(self, initial, starting, goal_grid, total, correct, optimal_swaps):
+        super().__init__((initial, starting, correct, optimal_swaps))
         self.goal = ((0, 0, 0, 0, 0), (0, 0, 0, 0, 0), (0, 0, 0, 0, 0), (0, 0, 0, 0, 0), (0, 0, 0, 0, 0))
         self.goal_grid = goal_grid
         self.total = total
@@ -67,29 +67,29 @@ class WaffleAgent(Problem):
     #         for r in row:
     #             sum += r
     #     # if node.depth < 7:
-    #     # sum -= (10 - node.depth)
+    #     sum -= (10 - node.depth)
     #     return sum - 1 * secondary_tiebreaker(node.state)
-
-    # def h(self, node):
-    #     misplaced = 0
-    #     for i in range(5):
-    #         for j in range(5):
-    #             if node.state[1][i][j] != self.goal_grid[i][j]:
-    #                 misplaced += 1
-    #     # penalty = max(0, 10 - node.depth)
-    #     return misplaced - node.depth
 
     def h(self, node):
         misplaced = 0
-        green_bonus = 0
-        grid, colors = node.state[1], node.state[0]
         for i in range(5):
             for j in range(5):
-                if grid[i][j] != self.goal_grid[i][j]:
+                if node.state[1][i][j] != self.goal_grid[i][j]:
                     misplaced += 1
-                if colors[i][j] == 0:
-                    green_bonus += 2
-        return (misplaced - green_bonus) - 0.1 * secondary_tiebreaker(node.state)
+        # penalty = max(0, 10 - node.depth)
+        return misplaced
+
+    # def h(self, node):
+    #     misplaced = 0
+    #     green_bonus = 0
+    #     grid, colors = node.state[1], node.state[0]
+    #     for i in range(5):
+    #         for j in range(5):
+    #             if grid[i][j] != self.goal_grid[i][j]:
+    #                 misplaced += 1
+    #             if colors[i][j] == 0:
+    #                 green_bonus += 2
+    #     return (misplaced - green_bonus) - 0.1 * secondary_tiebreaker(node.state)
 
     def actions(self, state):
         return self.successor(state).keys()
@@ -118,15 +118,36 @@ class WaffleAgent(Problem):
                 neighbors[action] = res
         return neighbors
 
+    def generate_optimal_moves(self, state, solution):
+        swaps = []
+        colors, grid = state
+        for i in range(5):
+            for j in range(5):
+                if colors[i][j] == 0:
+                    continue
+                for k in range(5):
+                    for l in range(5):
+                        if (i, j) == (k, l) or colors[k][l] == 0:
+                            continue
+                        if (
+                                grid[i][j] == solution[k][l]
+                                and grid[k][l] == solution[i][j]
+                        ):
+                            swaps.append((i, j, k, l))
+        return swaps
+
     def generate_state(self, state, move):
         x1, y1 = move[0]
         x2, y2 = move[1]
 
+        action = 'swap_' + str(x1) + str(y1) + '_' + str(x2) + str(y2)
+
         initial_color_sum = sum(sum(row) for row in state[0])
 
-        colors, grid, correct = state
+        colors, grid, correct, new_optimal = state
         correct_dict = tuple_to_dict(correct)
         new_grid = [list(row) for row in grid]
+        new_optimal = list(new_optimal)
 
         new_grid[x1][y1], new_grid[x2][y2] = new_grid[x2][y2], new_grid[x1][y1]
 
@@ -136,13 +157,24 @@ class WaffleAgent(Problem):
         if new_color_sum >= initial_color_sum:
             return None
 
+        optimal_swaps = self.generate_optimal_moves((new_colors, new_grid), self.goal_grid)
+        for a, swap in enumerate(optimal_swaps):
+            i, j, k, l = swap
+            if not is_valid(i, j, k, l, [], new_colors):
+                continue
+            new_grid[i][j], new_grid[k][l] = new_grid[k][l], new_grid[i][j]
+            new_colors, correct_dict = refresh_colors(new_grid, self.goal_grid, self.total, correct_dict, new_colors)
+            new_optimal.append((action + '_' + str(a), swap))
+
         new_state = (
             tuple(tuple(row) for row in new_colors),
             tuple(tuple(row) for row in new_grid),
-            dict_to_tuple(correct_dict)
+            dict_to_tuple(correct_dict),
+            tuple(new_optimal)
         )
 
         return new_state
+
 
     def goal_test(self, state):
         return self.goal == state[0]
@@ -159,14 +191,13 @@ def main(number):
     initial_state = tuple(tuple(row) for row in initial)
 
     waffle = WaffleAgent(initial_state, original_grid, solution_grid, total_dict,
-                         dict_to_tuple(green_dict))
+                         dict_to_tuple(green_dict), ())
     node = astar_search(waffle)
     suma = 0
     if node is not None:
         print(node.solution())
-        print(len(node.solution()))
-        states = node.solve()
-        return node.solution()
+        print(len(node.state[3]) + len(node.solution()))
+        return len(node.state[3]) + len(node.solution())
         # for state in states:
         #     print('colors', state[0])
         #     print('grid', state[1])
@@ -181,4 +212,8 @@ def main(number):
 
 
 if __name__ == '__main__':
-    main(1)
+    # lista = [9, 12, 15, 25, 32, 35, 36, 54, 56, 65, 73, 78, 81, 90, 93, 98]
+    suma = 0
+    for number in range(100):
+        suma += main(number)
+    print(suma)

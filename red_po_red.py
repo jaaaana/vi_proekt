@@ -95,7 +95,7 @@ def find_optimal_swaps(grid, solution, colors):
     swaps = []
     for i1 in range(5):
         for j1 in range(5):
-            if colors[i1][j1]:
+            if colors[i1][j1] == 0:
                 continue
             for i2 in range(5):
                 for j2 in range(5):
