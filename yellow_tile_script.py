@@ -81,16 +81,12 @@ def refresh_colors(new_grid, solution_grid, total, correct, current_colors):
 
     for i in range(5):
         for j in range(5):
-            print(solution_grid[i][j], new_grid[i][j])
             if solution_grid[i][j] == new_grid[i][j]:
                 new_colors[i][j] = 0
             elif check_yellow(i, j, new_grid, solution_grid, total, new_correct):
                 new_colors[i][j] = yellow
             else:
                 new_colors[i][j] = gray
-    print(new_grid)
-    print('current', current_colors)
-    print("new", new_colors)
     return new_colors, new_correct
 
 
