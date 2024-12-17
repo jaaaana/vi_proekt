@@ -158,3 +158,5 @@ if __name__ == '__main__':
         suma += main(i)
 
     print(suma)
+
+    # suma = 1017

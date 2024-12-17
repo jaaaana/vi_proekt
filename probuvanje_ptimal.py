@@ -48,6 +48,24 @@ def is_valid(i, j, k, l, moves, state):
     return True
 
 
+def generate_optimal_move(state, solution):
+    colors, grid = state
+    for i in range(5):
+        for j in range(5):
+            if colors[i][j] == 0:
+                continue
+            for k in range(5):
+                for l in range(5):
+                    if (i, j) == (k, l) or colors[k][l] == 0:
+                        continue
+                    if (
+                            grid[i][j] == solution[k][l]
+                            and grid[k][l] == solution[i][j]
+                    ):
+                        return i, j, k, l
+    return None
+
+
 class WaffleAgent(Problem):
     def __init__(self, initial, starting, goal_grid, total, correct):
         super().__init__((initial, starting, correct))
@@ -71,6 +89,16 @@ class WaffleAgent(Problem):
 
     def successor(self, state):
         neighbors = {}
+
+        optimal_swap = generate_optimal_move((state[0], state[1]), self.goal_grid)
+        if optimal_swap is not None:
+            action = 'swap_' + str(optimal_swap[0]) + str(optimal_swap[1]) + '_' + str(optimal_swap[2]) + str(
+                optimal_swap[3])
+            move = (optimal_swap[:2], optimal_swap[2:])
+            res = self.generate_state(state, move)
+            if res is not None:
+                neighbors[action] = res
+                return neighbors
 
         moves = []
         actions = []
@@ -158,3 +186,5 @@ if __name__ == '__main__':
         suma += main(i)
 
     print(suma)
+
+    # suma = 1012
