@@ -177,8 +177,7 @@ if __name__ == '__main__':
     suma = 0
     for i in range(100):
         print(i)
-        suma += len(main(10))
-        break
+        suma += len(main(i))
 
     print(suma)
     # suma = 1011
