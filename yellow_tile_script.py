@@ -1,6 +1,7 @@
 yellow = 1
 gray = 2
 
+
 def check_yellow(i, j, current_grid, solution, total, green):
     return check_row(i, j, current_grid, solution, total, green) or check_column(i, j, current_grid, solution, total,
                                                                                  green)
@@ -9,6 +10,8 @@ def check_yellow(i, j, current_grid, solution, total, green):
 def check_row(i, j, current_grid, solution, total, green):
     letter = current_grid[i][j]
     row_sol = [solution[i][k] for k in range(5) if i in (0, 2, 4)]
+    # row_sol = green[i // 2].keys()
+    # row_sol = green[i // 2].keys() if i in (0, 2, 4) else []
     in_row = letter in row_sol
     if in_row:
         if total[i // 2][letter] <= green[i // 2][letter]:
@@ -27,13 +30,15 @@ def check_row(i, j, current_grid, solution, total, green):
 def check_column(i, j, current_grid, solution, total, green):
     letter = current_grid[i][j]
     col_list = [solution[k][j] for k in range(5) if j in (0, 2, 4)]
+    # # col_list = green[j // 2 + 3].keys()
+    # col_list = green[j // 2 + 3].keys() if j in (0, 2, 4) else []
     in_col = letter in col_list
     if in_col:
         if total[j // 2 + 3][letter] <= green[j // 2 + 3][letter]:
             return False
         col_grid = [current_grid[k][j] for k in range(5) if j in (0, 2, 4)]
         if total[j // 2 + 3][letter] > green[j // 2 + 3][letter] and col_grid.count(letter) <= total[j // 2 + 3][
-            letter]:
+                letter]:
             return True
         else:
             if col_grid.index(letter) == i:

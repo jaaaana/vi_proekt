@@ -3,7 +3,7 @@ from yellow_tile_script import *
 from grids import grids
 from solutions import solutions
 import time
-from agent_new import main
+from best_version import main
 
 
 def read_grid(string):
@@ -69,17 +69,6 @@ def swap_tiles(pos1, pos2):
     GRID[i1][j1], GRID[i2][j2] = GRID[i2][j2], GRID[i1][j1]
     global COLORS, green
     COLORS, green = refresh_colors(GRID, SOLUTION, total, green, COLORS)
-
-
-def get_tile_position(mouse_pos):
-    x, y = mouse_pos
-    for i in range(5):
-        for j in range(5):
-            tile_x = j * (TILE_SIZE + MARGIN) + MARGIN
-            tile_y = i * (TILE_SIZE + MARGIN) + MARGIN
-            if tile_x <= x <= tile_x + TILE_SIZE and tile_y <= y <= tile_y + TILE_SIZE:
-                return i, j
-    return None
 
 
 def grid_to_screen_coordinates(row, col):
