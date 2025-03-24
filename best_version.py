@@ -175,9 +175,9 @@ def main(number):
 
 if __name__ == '__main__':
     suma = 0
-    for i in range(100):
-        print(i)
-        suma += len(main(i))
+    for a in range(100):
+        print(a)
+        suma += len(main(a))
 
     print(suma)
     # suma = 1011
